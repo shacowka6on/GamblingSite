@@ -1,0 +1,6 @@
+@GamblingSite_HostAddress = http://localhost:5206
+
+GET {{GamblingSite_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
