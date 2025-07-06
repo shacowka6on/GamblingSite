@@ -37,6 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<ISlotMachineService, SlotMachineService>();
 builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
