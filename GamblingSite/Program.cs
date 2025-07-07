@@ -1,7 +1,7 @@
 using GamblingSite.Core.Interfaces;
 using GamblingSite.Core.Services;
 using GamblingSite.Infrastructure.Data;
-using GamblingSite.Models;
+using GamblingSite.Infrastructure.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +20,7 @@ builder.Services.AddDbContext<GamblingSiteDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("GamblingSiteDbContext"));
 });
 
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         options.TokenValidationParameters = new TokenValidationParameters 
@@ -36,9 +37,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 
-builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<ISlotMachineService, SlotMachineService>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IBlackjackService, BlackjackService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

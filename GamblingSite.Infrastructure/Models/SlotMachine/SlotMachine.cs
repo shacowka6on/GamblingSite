@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GamblingSite.Infrastructure.Models
+namespace GamblingSite.Infrastructure.Models.SlotMachine
 {
-    public class SlotMachineResult
+    public class SlotMachine
     {
-        public string[] Symbols { get; set; }  
+        public string[] Symbols { get; set; }
         public decimal WinAmount { get; set; }
-        public bool isJackpot { get; set; } 
     }
 }

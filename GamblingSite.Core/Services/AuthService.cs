@@ -1,19 +1,20 @@
 ﻿using GamblingSite.Core.DTOs;
 using GamblingSite.Infrastructure.Data;
-using GamblingSite.Models;
 using Microsoft.EntityFrameworkCore;
 using BCrypt;
 using GamblingSite.Core.Interfaces;
+using GamblingSite.Infrastructure.Models;
 
 namespace GamblingSite.Core.Services
 {
     public class AuthService : IAuthService
     {
         private readonly GamblingSiteDbContext _context;
-        private readonly JwtTokenService _tokenService;
-        public AuthService(GamblingSiteDbContext context)
+        private readonly ITokenService _tokenService;
+        public AuthService(GamblingSiteDbContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
         public async Task<UserProfileDto> Register(RegisterUserDto dto)

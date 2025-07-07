@@ -1,5 +1,5 @@
 ﻿using GamblingSite.Core.Interfaces;
-using GamblingSite.Models;
+using GamblingSite.Infrastructure.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;

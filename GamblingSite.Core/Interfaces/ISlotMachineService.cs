@@ -1,4 +1,4 @@
-﻿using GamblingSite.Infrastructure.Models;
+﻿using GamblingSite.Infrastructure.Models.SlotMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +9,6 @@ namespace GamblingSite.Core.Interfaces
 {
     public interface ISlotMachineService
     {
-        SlotMachineResult Spin(decimal betAmount);
+        SlotMachine Spin(decimal betAmount);
     }
 }

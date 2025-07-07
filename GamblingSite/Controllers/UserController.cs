@@ -1,5 +1,5 @@
 ﻿using GamblingSite.Infrastructure.Data;
-using GamblingSite.Models;
+using GamblingSite.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +17,7 @@ namespace GamblingSite.Controllers
         {
             return await _context.Users.ToListAsync();
         }
-        [HttpGet("{id}")]
+        [HttpGet("id/{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -54,10 +54,6 @@ namespace GamblingSite.Controllers
                 throw;
             }
             return NoContent();
-        }
-        public IActionResult Index()
-        {
-            return View();
         }
     }
 }

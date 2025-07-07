@@ -1,4 +1,5 @@
 ﻿using GamblingSite.Core.DTOs;
+using GamblingSite.Core.Interfaces;
 using GamblingSite.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,8 +7,8 @@ namespace GamblingSite.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly AuthService _authService;
-        public AuthController(AuthService authService)
+        private readonly IAuthService _authService;
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
         }
@@ -39,13 +40,7 @@ namespace GamblingSite.Controllers
             catch(ArgumentException ex) 
             {
                 return BadRequest(ex.Message);
-
             }
-        }
-        [HttpGet("test")]
-        public async Task<IActionResult> TestAuth()
-        {
-            return Ok("You're authenticated");
         }
     }
 }

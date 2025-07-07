@@ -1,5 +1,5 @@
 ﻿using GamblingSite.Core.Interfaces;
-using GamblingSite.Infrastructure.Models;
+using GamblingSite.Infrastructure.Models.SlotMachine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,8 +30,7 @@ namespace GamblingSite.Core.Services
             ["🍒🍒"] = 0.25m,
             ["🍋🍋🍋"] = 1.5m,
         };
-
-        public SlotMachineResult Spin(decimal betAmount)
+        public SlotMachine Spin(decimal betAmount)
         {
             if(betAmount <= 0)
             {
@@ -41,28 +40,13 @@ namespace GamblingSite.Core.Services
             var rand = new Random();
             string[] slots = new string[3];
 
-            for(int i = 0; i < 3; i++)
+            for(int i = 0; i < slots.Length; i++)
             {
                 slots[i] = GetWeightedRandomSymbol(_symbolWeights, rand);
             }
 
-            string spinResult = string.Join("", slots);
-            decimal winAmount = 0;
-            bool isJackpot = false;
-
-            if (_payouts.TryGetValue(spinResult, out decimal value))
+            return new SlotMachine()
             {
-                decimal multiplier = value;
-                winAmount = multiplier * betAmount;
-                if(spinResult == "💰💰💰")
-                {
-                    isJackpot = true;
-                }
-            }
-
-            return new SlotMachineResult()
-            {
-                isJackpot = isJackpot,
                 WinAmount = CalculateWin(slots, betAmount),
                 Symbols = slots,
             };

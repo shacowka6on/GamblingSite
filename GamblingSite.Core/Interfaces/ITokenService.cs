@@ -1,4 +1,4 @@
-﻿using GamblingSite.Models;
+﻿using GamblingSite.Infrastructure.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GamblingSite.Models
+namespace GamblingSite.Infrastructure.Models
 {
     public class User
     {
@@ -9,6 +9,6 @@ namespace GamblingSite.Models
         public string Name { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public double Balance { get; set; }   
+        public decimal Balance { get; set; }
     }
 }
