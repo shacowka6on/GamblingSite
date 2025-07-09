@@ -121,7 +121,7 @@ namespace GamblingSite.Core.Services
             game.DealerCardsJson = JsonSerializer.Serialize(game.DealerCards);
 
             _context.BlackjackGames.Add(game);
-            _context.SaveChanges();
+            _context.SaveChangesAsync();
 
             return game;
         }

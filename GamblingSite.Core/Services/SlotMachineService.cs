@@ -1,5 +1,6 @@
 ﻿using GamblingSite.Core.Interfaces;
 using GamblingSite.Infrastructure.Models.SlotMachine;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,11 @@ namespace GamblingSite.Core.Services
     {
         private readonly Dictionary<string, int> _symbolWeights = new()
         {
-            ["💰"] = 5,  
-            ["🍀"] = 10,
-            ["7️⃣"] = 20,
-            ["🍒"] = 30,
-            ["🍋"] = 35
+            ["💰"] = 5,  //💰
+            ["🍀"] = 10, //🍀
+            ["7️⃣"] = 20,        //7️⃣
+            ["🍒"] = 30,   //🍒
+            ["🍋"] = 35     //🍋
         };
         private readonly Dictionary<string, decimal> _payouts = new()
         {
@@ -38,7 +39,7 @@ namespace GamblingSite.Core.Services
             }
 
             var rand = new Random();
-            string[] slots = new string[3];
+            string[] slots = new string[9];
 
             for(int i = 0; i < slots.Length; i++)
             {
@@ -54,30 +55,54 @@ namespace GamblingSite.Core.Services
 
         private decimal CalculateWin(string[] slots, decimal betAmount)
         {
-            string spinStr = string.Join("", slots);
+            var matrix = new string[3,3];
             decimal win = 0;
-
-            if(_payouts.TryGetValue(spinStr, out decimal multiplier))
+            int row = 0;
+            for(int i = 0; i < slots.Length; i+=3)
             {
-                win = betAmount * multiplier;
-            }
-            else
-            {
-                foreach(var combo in _payouts.Keys.Where(k => k.Length == 2))
+                for(int col = 0; col < 3; col++)
                 {
-                    if (spinStr.Contains(combo))
-                    {
-                        win = betAmount * _payouts[combo];
-                        break;
-                    }
+                    matrix[row, col] = slots[i+col];
                 }
-                if(win == 0)
+                row += 1;
+            }
+
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                //Previous code joined 3 string elements and checked for rewards
+                //New version has 3x3 matrix of string elements and instead of checking
+                //and returning only a single row it checks all 3 rows for rewards.
+
+                string[] joinRow = new string[3];
+                for(int col = 0; col < matrix.GetLength(0); col++)
                 {
-                    foreach(var symbol in slots)
+                    joinRow[col] = matrix[i, col];
+                }
+                string spinStr = string.Join("", joinRow);
+                Console.WriteLine(spinStr);
+
+                if (_payouts.TryGetValue(spinStr, out decimal multiplier))
+                {
+                    win = betAmount * multiplier;
+                }
+                else
+                {
+                    foreach (var combo in _payouts.Keys.Where(k => k.Length == 2))
                     {
-                        if(_payouts.ContainsKey(symbol))
+                        if (spinStr.Contains(combo))
                         {
-                            win += betAmount * multiplier;
+                            win = betAmount * _payouts[combo];
+                            break;
+                        }
+                    }
+                    if (win == 0)
+                    {
+                        foreach (var symbol in slots)
+                        {
+                            if (_payouts.ContainsKey(symbol))
+                            {
+                                win += betAmount * multiplier;
+                            }
                         }
                     }
                 }

@@ -35,25 +35,6 @@ namespace GamblingSite.Controllers
 
             return CreatedAtAction(nameof(CreateUser), new { id = user.Id}, user);
         }
-        [HttpPut("{id}")]
-        public async Task<ActionResult<User>> CreateBet(int id, User user)
-        {
-            if (id != user.Id)
-            {
-                return BadRequest();
-            }
-            
-            _context.Entry(user).State = EntityState.Modified;
-            
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
-            return NoContent();
-        }
+        
     }
 }
