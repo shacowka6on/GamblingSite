@@ -1,28 +1,28 @@
 ﻿using GamblingSite.Core.Interfaces;
+using GamblingSite.Infrastructure.Data;
 using GamblingSite.Infrastructure.Models.SlotMachine;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GamblingSite.Core.Services
 {
     public class SlotMachineService : ISlotMachineService
     {
+        private readonly GamblingSiteDbContext _context;
+        public SlotMachineService(GamblingSiteDbContext context)
+        {
+            _context = context;
+        }
         private readonly Dictionary<string, int> _symbolWeights = new()
         {
-            ["💰"] = 5,  //💰
-            ["🍀"] = 10, //🍀
-            ["7️⃣"] = 20,        //7️⃣
-            ["🍒"] = 30,   //🍒
-            ["🍋"] = 35     //🍋
+            ["💰"] = 5,
+            ["🍀"] = 10,
+            ["7️⃣"] = 20,
+            ["🍒"] = 30,
+            ["🍋"] = 35
         };
         private readonly Dictionary<string, decimal> _payouts = new()
         {
-            ["💰💰💰"] = 10m,  
-            ["💰💰"] = 2m,  
+            ["💰💰💰"] = 10m,
+            ["💰💰"] = 2m,
             ["💰"] = 0.5m,
             ["🍀🍀🍀"] = 5m,
             ["🍀🍀"] = 1.3m,
@@ -31,38 +31,70 @@ namespace GamblingSite.Core.Services
             ["🍒🍒"] = 0.25m,
             ["🍋🍋🍋"] = 1.5m,
         };
-        public SlotMachine Spin(decimal betAmount)
+        public async Task<SlotMachine> Spin(decimal betAmount, int userId)
         {
-            if(betAmount <= 0)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                throw new ArgumentException("Bet amount must be positive", nameof(betAmount));
+
+
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    throw new ArgumentException("User not found");
+                }
+
+                if (user.Balance < betAmount)
+                {
+                    throw new ArgumentException("User doesn't have enough money");
+                }
+
+                if (betAmount <= 0)
+                {
+                    throw new ArgumentException("Bet amount must be positive", nameof(betAmount));
+                }
+
+                user.Balance -= betAmount;
+                await _context.SaveChangesAsync();
+
+                var rand = new Random();
+                string[] slots = new string[9];
+
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    slots[i] = GetWeightedRandomSymbol(_symbolWeights, rand);
+                }
+
+                decimal result = CalculateWin(slots, betAmount);
+                if (result > 0)
+                {
+                    user.Balance += result;
+                    _context.SaveChanges();
+                }
+
+                return new SlotMachine()
+                {
+                    WinAmount = result,
+                    Symbols = slots,
+                };
             }
-
-            var rand = new Random();
-            string[] slots = new string[9];
-
-            for(int i = 0; i < slots.Length; i++)
+            catch 
             {
-                slots[i] = GetWeightedRandomSymbol(_symbolWeights, rand);
+                await transaction.RollbackAsync(); 
+                throw;
             }
-
-            return new SlotMachine()
-            {
-                WinAmount = CalculateWin(slots, betAmount),
-                Symbols = slots,
-            };
         }
 
         private decimal CalculateWin(string[] slots, decimal betAmount)
         {
-            var matrix = new string[3,3];
+            var matrix = new string[3, 3];
             decimal win = 0;
             int row = 0;
-            for(int i = 0; i < slots.Length; i+=3)
+            for (int i = 0; i < slots.Length; i += 3)
             {
-                for(int col = 0; col < 3; col++)
+                for (int col = 0; col < 3; col++)
                 {
-                    matrix[row, col] = slots[i+col];
+                    matrix[row, col] = slots[i + col];
                 }
                 row += 1;
             }
@@ -74,16 +106,15 @@ namespace GamblingSite.Core.Services
                 //and returning only a single row it checks all 3 rows for rewards.
 
                 string[] joinRow = new string[3];
-                for(int col = 0; col < matrix.GetLength(0); col++)
+                for (int col = 0; col < matrix.GetLength(0); col++)
                 {
                     joinRow[col] = matrix[i, col];
                 }
                 string spinStr = string.Join("", joinRow);
-                Console.WriteLine(spinStr);
 
                 if (_payouts.TryGetValue(spinStr, out decimal multiplier))
                 {
-                    win = betAmount * multiplier;
+                    win += betAmount * multiplier;
                 }
                 else
                 {
@@ -91,7 +122,7 @@ namespace GamblingSite.Core.Services
                     {
                         if (spinStr.Contains(combo))
                         {
-                            win = betAmount * _payouts[combo];
+                            win += betAmount * _payouts[combo];
                             break;
                         }
                     }
@@ -116,7 +147,7 @@ namespace GamblingSite.Core.Services
             int randomNumber = rand.Next(1, totalWeight + 1);
             int increasedWeight = 0;
 
-            foreach(var (symbol, weight) in weights)
+            foreach (var (symbol, weight) in weights)
             {
                 increasedWeight += weight;
                 if (randomNumber <= increasedWeight) return symbol;

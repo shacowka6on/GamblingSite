@@ -11,11 +11,11 @@ namespace GamblingSite.Controllers
             _slotMachineService = slotService;
         }
         [HttpPost("spin")]
-        public IActionResult Spin([FromBody] decimal betAmount)
+        public IActionResult Spin([FromBody] decimal betAmount, int id)
         {
             try
             {
-                var result = _slotMachineService.Spin(betAmount);
+                var result = _slotMachineService.Spin(betAmount, id);
                 return Ok(result);
             }
             catch (ArgumentException ex)
