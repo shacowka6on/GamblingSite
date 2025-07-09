@@ -9,6 +9,6 @@ namespace GamblingSite.Core.Interfaces
 {
     public interface ISlotMachineService
     {
-        SlotMachine Spin(decimal betAmount, int id);
+        Task<SlotMachine> Spin(decimal betAmount, int id);
     }
 }

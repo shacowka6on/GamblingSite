@@ -2,12 +2,7 @@
 using GamblingSite.Infrastructure.Data;
 using GamblingSite.Infrastructure.Models;
 using GamblingSite.Infrastructure.Models.Blackjack;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace GamblingSite.Core.Services
 {
@@ -29,7 +24,7 @@ namespace GamblingSite.Core.Services
             }
             return totalValue;
         }
-        public BlackjackGame Hit(int gameId)
+        public async Task<BlackjackGame> Hit(int gameId)
         {
             var game = _context.BlackjackGames.FirstOrDefault(x => x.Id == gameId);
             if (game == null || game.IsFinished)
@@ -37,13 +32,17 @@ namespace GamblingSite.Core.Services
                 throw new ArgumentException("Game is finished or not found");
             }
 
+            game.PlayerCards = JsonSerializer.Deserialize<List<Card>>(game.PlayerCardsJson) ?? new();
+            game.DealerCards = JsonSerializer.Deserialize<List<Card>>(game.DealerCardsJson) ?? new();
             var deck = JsonSerializer.Deserialize<List<Card>>(game.DeckJson);
+            
             game.PlayerCards.Add(DrawCard(deck));
 
             game.DeckJson = JsonSerializer.Serialize(deck);
+            game.PlayerCardsJson = JsonSerializer.Serialize(game.PlayerCards);
+            game.DealerCardsJson = JsonSerializer.Serialize(game.DealerCards);
 
-
-            var user = _context.Users.Find(game.UserId);
+            var user = await _context.Users.FindAsync(game.UserId);
 
             if (GetBlackjackHandValue(game.PlayerCards) > 21)
             {
@@ -56,43 +55,53 @@ namespace GamblingSite.Core.Services
             return game;
         }
 
-        public BlackjackGame Stand(int gameId)
+        public async Task<BlackjackGame> Stand(int gameId)
         {
             var game = _context.BlackjackGames.FirstOrDefault(x => x.Id == gameId);
             if (game == null || game.IsFinished)
             {
                 throw new ArgumentException("Game is finished or not found");
             }
-
+            
+            game.PlayerCards = JsonSerializer.Deserialize<List<Card>>(game.PlayerCardsJson) ?? new();
+            game.DealerCards = JsonSerializer.Deserialize<List<Card>>(game.DealerCardsJson) ?? new();
             var deck = JsonSerializer.Deserialize<List<Card>>(game.DeckJson);
+            
             while (GetBlackjackHandValue(game.DealerCards) < 17)
             {
                 game.DealerCards.Add(DrawCard(deck));
             }
-            
+
             int playerTotal = GetBlackjackHandValue(game.PlayerCards);
             int dealerTotal = GetBlackjackHandValue(game.DealerCards);
-            
+
             game.IsFinished = true;
             game.Result = dealerTotal > 21 || playerTotal > dealerTotal
                 ? "Player wins"
                 : "Dealer wins";
 
             var user = _context.Users.Find(game.UserId);
-            if(game.Result == "Player wins")
+            if (game.Result == "Player wins")
             {
                 user.Balance += game.BetAmount * 2;
             }
 
             game.DeckJson = JsonSerializer.Serialize(deck);
+            game.PlayerCardsJson = JsonSerializer.Serialize(game.PlayerCards);
+            game.DealerCardsJson = JsonSerializer.Serialize(game.DealerCards);
+
 
             _context.SaveChanges();
             return game;
         }
 
-        public BlackjackGame Start(int userId, decimal betAmount)
+        public async Task<BlackjackGame> Start(int userId, decimal betAmount)
         {
-            var user = _context.Users.Find(userId) ?? throw new ArgumentException("Player doesn't exist");
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new ArgumentException("Player doesn't exist");
+            }
             if ((user.Balance - betAmount) < 0)
             {
                 throw new ArgumentException("Insufficient funds");
@@ -109,19 +118,21 @@ namespace GamblingSite.Core.Services
                 BetAmount = betAmount,
                 IsFinished = false,
             };
-            //player draws 2 cards
             game.PlayerCards.Add(DrawCard(deck));
             game.PlayerCards.Add(DrawCard(deck));
 
-            //dealer draws 2 cards
             game.DealerCards.Add(DrawCard(deck));
             game.DealerCards.Add(DrawCard(deck));
 
             game.PlayerCardsJson = JsonSerializer.Serialize(game.PlayerCards);
             game.DealerCardsJson = JsonSerializer.Serialize(game.DealerCards);
+            game.DeckJson = JsonSerializer.Serialize(deck);
+            game.Result = "In progress";
+            game.IsFinished = false;
+            
 
             _context.BlackjackGames.Add(game);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return game;
         }

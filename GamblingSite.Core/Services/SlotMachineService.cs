@@ -69,7 +69,7 @@ namespace GamblingSite.Core.Services
                 if (result > 0)
                 {
                     user.Balance += result;
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                 }
 
                 return new SlotMachine()
@@ -101,10 +101,6 @@ namespace GamblingSite.Core.Services
 
             for (int i = 0; i < matrix.GetLength(0); i++)
             {
-                //Previous code joined 3 string elements and checked for rewards
-                //New version has 3x3 matrix of string elements and instead of checking
-                //and returning only a single row it checks all 3 rows for rewards.
-
                 string[] joinRow = new string[3];
                 for (int col = 0; col < matrix.GetLength(0); col++)
                 {
@@ -126,14 +122,11 @@ namespace GamblingSite.Core.Services
                             break;
                         }
                     }
-                    if (win == 0)
+                    foreach (var symbol in slots)
                     {
-                        foreach (var symbol in slots)
+                        if (_payouts.TryGetValue(symbol, out var singleMultiplier) && symbol.Length == 1)
                         {
-                            if (_payouts.ContainsKey(symbol))
-                            {
-                                win += betAmount * multiplier;
-                            }
+                            win += betAmount * singleMultiplier;
                         }
                     }
                 }

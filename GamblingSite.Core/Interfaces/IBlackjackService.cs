@@ -10,8 +10,8 @@ namespace GamblingSite.Core.Interfaces
 {
     public interface IBlackjackService
     {
-        BlackjackGame Start(int userId, decimal betAmount);
-        BlackjackGame Hit(int gameId);
-        BlackjackGame Stand(int gameId);
+        Task<BlackjackGame> Start(int userId, decimal betAmount);
+        Task<BlackjackGame> Hit(int gameId);
+        Task<BlackjackGame> Stand(int gameId);
     }
 }
