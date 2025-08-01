@@ -36,8 +36,6 @@ namespace GamblingSite.Core.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-
-
                 var user = await _context.Users.FindAsync(userId);
                 if (user == null)
                 {
